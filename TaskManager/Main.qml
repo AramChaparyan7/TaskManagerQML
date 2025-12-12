@@ -4,79 +4,125 @@ import QtQuick.Layouts
 import QtQuick.Dialogs
 
 Window {
+    id: window
     minimumHeight: 600
     minimumWidth: 800
     visible: true
     title: qsTr("Hello World")
+    property bool completedVar: true
+    property bool activeVar: true
     ColumnLayout {
+        id: columnLayout
+        anchors.fill: parent
         RowLayout {
+            id: filterButtons
+            Layout.alignment: Qt.AlignHCenter
+            anchors.top: parent.top
+            width: parent.width
             Button {
                 id: all
+                palette.button: "blue"
+                Layout.minimumHeight: 40
+                Layout.minimumWidth: 100
                 Text {
-                    text: qsTr("All")
+                    text: "All"
+                    anchors.centerIn: parent
                 }
                 onClicked: {
-                    filter("all")
+                    completedVar = true
+                    activeVar = true
                 }
             }
             Button {
                 id: completed
+                palette.button: "blue"
+                Layout.minimumHeight: 40
+                Layout.minimumWidth: 100
                 Text {
                     text: qsTr("Completed")
+                    anchors.centerIn: parent
                 }
                 onClicked: {
-                    filter("completed")
+                    completedVar = true
+                    activeVar = false
                 }
             }
             Button {
                 id: active
+                palette.button: "blue"
+                Layout.minimumHeight: 40
+                Layout.minimumWidth: 100
                 Text {
                     text: qsTr("Active")
+                    anchors.centerIn: parent
                 }
                 onClicked: {
-                    filter("active")
+                    activeVar = true
+                    completedVar = false
                 }
             }
         }
         RowLayout {
+            Layout.alignment: Qt.AlignHCenter
+            width: parent.width
+            spacing: 15
+            Layout.margins: 10
             Text {
                 id: totalCount
+                font.pixelSize: 22
                 property int totalTasks: 1
                 text: qsTr("Total: " + totalTasks)
             }
             Text {
                 id:completedCount
+                font.pixelSize: 22
                 property int completedTasks: 0
                 text: qsTr("Completed: " + completedTasks)
             }
             Text {
                 id: remainingCount
+                font.pixelSize: 22
                 property int remainingTasks: 1
                 text: qsTr("Remaining: " + remainingTasks)
             }
         }
 
         ListView {
-            height: 500
-            model: filtermodel
+            Layout.alignment: Qt.AlignHCenter
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+            model: listmodel
             delegate: listDelegate
             width: parent.width
         }
 
         RowLayout {
+            id: modifyButtons
+            Layout.alignment: Qt.AlignHCenter
+            anchors.bottom: window.bottom
+            width: parent.width
             Button {
+                palette.button: "skyblue"
+                Layout.minimumHeight: 40
+                Layout.minimumWidth: 100
                 text: "Add task"
                 onClicked: {
                     addDialog.open()
                 }
             }
             Button {
+                palette.button: "skyblue"
+                Layout.minimumHeight: 40
+                Layout.minimumWidth: 100
                 text: "Remove task"
                 onClicked: {
                     removeDialog.open()
                 }
             }
             Button {
+                palette.button: "skyblue"
+                Layout.minimumHeight: 40
+                Layout.minimumWidth: 100
                 text: "Edit task"
                 onClicked: {
                     editDialog.open()
@@ -86,22 +132,57 @@ Window {
     }
     Component {
         id: listDelegate
-        RowLayout {
-            CheckBox {
-                checked: completed
-                //onCheckedChanged: completed = checked
-                text: qsTr("Completed")
+        Rectangle {
+            visible: {
+                if(completedVar && model.completed) return true
+                if(activeVar && !model.completed) return true
+                return false
             }
-            Text {
-                text: title
-            }
-            Rectangle {
-                color: Color
-                width: 20
-                height: 20
-            }
-            Text {
-                text: due_date
+
+            width: componentLayout.width
+            height: componentLayout.height
+            anchors.horizontalCenter: parent.horizontalCenter
+            color: "grey"
+            radius: 8
+            border.width: 1
+            border.color: "black"
+            RowLayout {
+                id: componentLayout
+                Layout.alignment: Qt.AlignHCenter
+                spacing: 15
+                CheckBox {
+                    checked: completed
+                    onCheckedChanged: {
+                        if(completed === true) {
+                            completed = false
+                            completedCount.completedTasks -= 1
+                            remainingCount.remainingTasks += 1
+                        }
+                        else {
+                            completed = true
+                            completedCount.completedTasks += 1
+                            remainingCount.remainingTasks -= 1
+                        }
+
+                    }
+
+                    text: "Completed"
+                    font.pixelSize: 20
+                }
+                Text {
+                    text: title
+                    font.pixelSize: 20
+                }
+                Rectangle {
+                    color: priorityColor
+                    width: 20
+                    height: 20
+                }
+                Text {
+                    text: due_date
+                    rightPadding: 15
+                    font.pixelSize: 20
+                }
             }
         }
     }
@@ -111,13 +192,9 @@ Window {
         ListElement {
             completed: false
             title: "Task1"
-            Color: "green"
+            priorityColor: "green"
             due_date: "03-08-2009"
         }
-    }
-
-    ListModel {
-        id: filtermodel
     }
 
     Dialog {
@@ -145,7 +222,7 @@ Window {
             }
             TextField {
                 id: priorityInput
-                placeholderText: "Color"
+                placeholderText: "color"
             }
 
             Label {
@@ -156,18 +233,18 @@ Window {
                 placeholderText: "YYYY-MM-DD"
             }
         }
+        Component.onCompleted: {
+            standardButton(Dialog.Ok).enabled = Qt.binding(function() {
+                return titleInput.text.trim() !== "" && priorityInput.text.trim() !== "" && dateInput.text.trim() !== ""
+            })
+        }
+
         onAccepted: {
             listmodel.append({
-                title: titleInput.text,
+                title: titleInput.text.trim(),
                 completed: false,
-                Color: priorityInput.text,
-                due_date: dateInput.text
-            })
-            filtermodel.append({
-                title: titleInput.text,
-                completed: false,
-                Color: priorityInput.text,
-                due_date: dateInput.text
+                priorityColor: priorityInput.text.trim(),
+                due_date: dateInput.text.trim()
             })
             totalCount.totalTasks += 1
             remainingCount.remainingTasks += 1
@@ -190,7 +267,7 @@ Window {
             }
             TextField {
                 id: nameInput
-                placeholderText: "TaskName"
+                placeholderText: "taskName"
             }
         }
 
@@ -201,18 +278,20 @@ Window {
 
     Dialog {
         id: editDialog
-        title: "Add New Task"
+        title: "Edit Task"
         width: 450
         height: 300
         standardButtons: Dialog.Ok | Dialog.Cancel
+        property string taskName: ""
+        property int taskIndex: 0
+        property bool flag: false
 
         GridLayout {
             anchors.fill: parent
             columns: 2
             rowSpacing: 15
             columnSpacing: 15
-            property string TaskName: ""
-            property int taskIndex: 0
+
 
             Label {
                 text: "Enter the name of the task"
@@ -226,21 +305,20 @@ Window {
                 Layout.alignment: Qt.AlignCenter
                 text: "submit"
                 onClicked: {
-                    var flag = false
-                    TaskName = editNameInput.text
+                    editDialog.taskName = editNameInput.text
                     for(var i = 0;  i < listmodel.count; ++i) {
                         var task = listmodel.get(i)
-                        if (TaskName === task.title) {
-                            flag = true
-                            taskIndex = i
+                        if (editDialog.taskName === task.title) {
+                            editDialog.flag = true
+                            editDialog.taskIndex = i
                         }
                     }
-                    if(flag == false) {
+                    if(editDialog.flag == false) {
                         warning.open()
                     }else {
-                        editTitleInput.text = listmodel.get(taskIndex).title
-                        editDateInput.text = listmodel.get(taskIndex).due_date
-                        editPriorityInput.text = listmodel.get(taskIndex).Color
+                        editTitleInput.text = listmodel.get(editDialog.taskIndex).title
+                        editDateInput.text = listmodel.get(editDialog.taskIndex).due_date
+                        editPriorityInput.text = listmodel.get(editDialog.taskIndex).priorityColor
                     }
                 }
             }
@@ -269,28 +347,20 @@ Window {
                 placeholderText: "YYYY-MM-DD"
             }
         }
+        Component.onCompleted: {
+            standardButton(Dialog.Ok).enabled = Qt.binding(function() {
+                return editDialog.flag && editTitleInput.text.trim() !== "" && editPriorityInput.text.trim() !== "" && editDateInput.text.trim() !== ""
+            })
+        }
+
         onAccepted: {
-            listmodel.get(taskIndex).title = editTitleInput.text
-            listmodel.get(taskIndex).due_date = editDateInput.text
-            listmodel.get(taskIndex).priority = editPriorityInput.text
+            listmodel.get(taskIndex).title = editTitleInput.text.trim()
+            listmodel.get(taskIndex).due_date = editDateInput.text.trim()
+            listmodel.get(taskIndex).priorityColor = editPriorityInput.text.trim()
 
             titleInput.text = ""
             priorityInput.text = ""
             dateInput.text = ""
-        }
-    }
-
-    function filter(button) {
-        filtermodel.clear()
-        for(var i = 0;  i < listmodel.count; ++i) {
-            var task = listmodel.get(i)
-            if (button === "all") {
-                filtermodel.append(task)
-            } else if (button === "active" && !task.completed) {
-                filtermodel.append(task)
-            } else if (button === "completed" && task.completed) {
-                filtermodel.append(task)
-            }
         }
     }
 
@@ -308,7 +378,7 @@ Window {
                 flag = true
                 totalCount.totalTasks -= 1
                 if(task.completed) {
-                    completeCount.completedTasks -= 1
+                    completedCount.completedTasks -= 1
                 } else {
                     remainingCount.remainingTasks -= 1
                 }
