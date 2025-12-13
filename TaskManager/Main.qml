@@ -189,12 +189,6 @@ Window {
 
     ListModel {
         id: listmodel
-        ListElement {
-            completed: false
-            title: "Task1"
-            priorityColor: "green"
-            due_date: "03-08-2009"
-        }
     }
 
     Dialog {
@@ -218,11 +212,22 @@ Window {
             }
 
             Label {
-                text: "Priority(green, red or orange)"
+                text: "Priority"
             }
-            TextField {
-                id: priorityInput
-                placeholderText: "color"
+            Column {
+                RadioButton {
+                    id: low
+                    checked: true
+                    text: "Low"
+                }
+                RadioButton {
+                    id: medium
+                    text: "Medium"
+                }
+                RadioButton {
+                    id: high
+                    text: "High"
+                }
             }
 
             Label {
@@ -235,21 +240,24 @@ Window {
         }
         Component.onCompleted: {
             standardButton(Dialog.Ok).enabled = Qt.binding(function() {
-                return titleInput.text.trim() !== "" && priorityInput.text.trim() !== "" && dateInput.text.trim() !== ""
+                return titleInput.text.trim() !== "" && dateInput.text.trim() !== ""
             })
         }
 
         onAccepted: {
+            var clr = ""
+            if(low.checked === true) clr = "green"
+            else if(medium.checked === true) clr = "orange"
+            else if(high.checked === true) clr = "red"
             listmodel.append({
                 title: titleInput.text.trim(),
                 completed: false,
-                priorityColor: priorityInput.text.trim(),
+                priorityColor: clr,
                 due_date: dateInput.text.trim()
             })
             totalCount.totalTasks += 1
             remainingCount.remainingTasks += 1
             titleInput.text = ""
-            priorityInput.text = ""
             dateInput.text = ""
         }
     }
@@ -280,7 +288,7 @@ Window {
         id: editDialog
         title: "Edit Task"
         width: 450
-        height: 300
+        height: 350
         standardButtons: Dialog.Ok | Dialog.Cancel
         property string taskName: ""
         property int taskIndex: 0
@@ -318,7 +326,7 @@ Window {
                     }else {
                         editTitleInput.text = listmodel.get(editDialog.taskIndex).title
                         editDateInput.text = listmodel.get(editDialog.taskIndex).due_date
-                        editPriorityInput.text = listmodel.get(editDialog.taskIndex).priorityColor
+                        edit.text = listmodel.get(editDialog.taskIndex).priorityColor
                     }
                 }
             }
@@ -334,9 +342,20 @@ Window {
             Label {
                 text: "Priority:"
             }
-            TextField {
-                id: editPriorityInput
-                placeholderText: "green, orange, or red"
+            Column {
+                RadioButton {
+                    id: editlow
+                    checked: true
+                    text: "Low"
+                }
+                RadioButton {
+                    id: editmedium
+                    text: "Medium"
+                }
+                RadioButton {
+                    id: edithigh
+                    text: "High"
+                }
             }
 
             Label {
@@ -349,17 +368,21 @@ Window {
         }
         Component.onCompleted: {
             standardButton(Dialog.Ok).enabled = Qt.binding(function() {
-                return editDialog.flag && editTitleInput.text.trim() !== "" && editPriorityInput.text.trim() !== "" && editDateInput.text.trim() !== ""
+                return editDialog.flag && editTitleInput.text.trim() !== "" && editDateInput.text.trim() !== ""
             })
         }
 
         onAccepted: {
+            var clr = ""
+            if(editlow.checked === true) clr = "green"
+            else if(editmedium.checked === true) clr = "orange"
+            else if(edithigh.checked === true) clr = "red"
+
             listmodel.get(taskIndex).title = editTitleInput.text.trim()
             listmodel.get(taskIndex).due_date = editDateInput.text.trim()
-            listmodel.get(taskIndex).priorityColor = editPriorityInput.text.trim()
+            listmodel.get(taskIndex).priorityColor = clr
 
             titleInput.text = ""
-            priorityInput.text = ""
             dateInput.text = ""
         }
     }
