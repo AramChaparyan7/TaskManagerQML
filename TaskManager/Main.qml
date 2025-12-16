@@ -5,8 +5,8 @@ import QtQuick.Dialogs
 
 Window {
     id: window
-    minimumHeight: 600
-    minimumWidth: 800
+    // minimumHeight: 600
+    // minimumWidth: 800
     visible: true
     title: qsTr("Hello World")
     property bool completedVar: true
@@ -17,7 +17,6 @@ Window {
         RowLayout {
             id: filterButtons
             Layout.alignment: Qt.AlignHCenter
-            anchors.top: parent.top
             width: parent.width
             Button {
                 id: all
@@ -70,7 +69,7 @@ Window {
             Text {
                 id: totalCount
                 font.pixelSize: 22
-                property int totalTasks: 1
+                property int totalTasks: 0
                 text: qsTr("Total: " + totalTasks)
             }
             Text {
@@ -82,7 +81,7 @@ Window {
             Text {
                 id: remainingCount
                 font.pixelSize: 22
-                property int remainingTasks: 1
+                property int remainingTasks: 0
                 text: qsTr("Remaining: " + remainingTasks)
             }
         }
